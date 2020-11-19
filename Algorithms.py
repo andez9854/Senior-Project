@@ -7,27 +7,47 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as mplot
 import open3d as o3d
 from scipy.spatial import Delaunay
+import pickle
 
 #Poisson Surface Reconstruction - 2-3 minute compile
-mesh = (o3d.io.read_triangle_mesh("STLs/dragon.stl"))
+drag = (o3d.io.read_triangle_mesh("STLs/dragon.stl"))
 cloud = o3d.geometry.PointCloud()
-cloud.points = mesh.vertices
+cloud.points = drag.vertices
+#Point cloud used for creating the mesh
+o3d.visualization.draw_geometries([cloud])
 #print(cloud.has_normals())
 cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=1, max_nn=1000))
 with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug) as cm:
-    render, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(cloud, depth=15)
-print(render)
-o3d.visualization.draw_geometries([render])
+    renderD, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(cloud, depth=15)
+print(renderD)
+o3d.visualization.draw_geometries([renderD])
 vertices_to_remove = densities < np.quantile(densities, 0.01)
-render.remove_vertices_by_mask(vertices_to_remove)
-print(render)
-o3d.visualization.draw_geometries([render])
+renderD.remove_vertices_by_mask(vertices_to_remove)
+print(renderD)
+o3d.visualization.draw_geometries([renderD])
+print(drag)
+o3d.visualization.draw_geometries([drag])
+
+#19 Seconds
+panther = (o3d.io.read_triangle_mesh("STLs/panther.stl"))
+cloud = o3d.geometry.PointCloud()
+cloud.points = panther.vertices
+#print(cloud.has_normals())
+print(panther)
+o3d.visualization.draw_geometries([panther])
+cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=.01, max_nn=1000))
+with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug) as cm:
+    renderP, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(cloud, depth=15)
+print(renderP)
+o3d.visualization.draw_geometries([renderP])
+vertices_to_remove = densities < np.quantile(densities, 0.01)
+renderP.remove_vertices_by_mask(vertices_to_remove)
+print(renderP)
+o3d.visualization.draw_geometries([renderP])
 
 #Matplotlib - Extremely fast, low poly only
 for file in os.listdir('PlatonicSolids'):
-    #Using an existing stl file:
-    testMesh = mesh.Mesh.from_file("PlatonicSolids/"+file)
-    #testMesh = mesh.Mesh.from_file("STLs/"+file)
+    testMesh = mesh.Mesh.from_file("./PlatonicSolids/"+file)
     testMesh.normals
 
     fig = mplot.figure()
@@ -44,25 +64,31 @@ for file in os.listdir('STLs'):
     cloud.points = mesh.vertices
     tetra_mesh, pt_map = o3d.geometry.TetraMesh.create_from_point_cloud(cloud)
     o3d.visualization.draw_geometries([tetra_mesh])
+    print(tetra_mesh)
 
 #Alpha Shape - Fast Compile but creates false images when the alpha is high enough to hit all the points
 mesh = (o3d.io.read_triangle_mesh("STLs/dragon.stl"))
 cloud = o3d.geometry.PointCloud()
 cloud.points = mesh.vertices
 tetra_mesh, pt_map = o3d.geometry.TetraMesh.create_from_point_cloud(cloud)
+
 for alpha in np.logspace(np.log10(5), np.log10(0.25), num=5):
     print(f"alpha={alpha:.3f}")
     Tmesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(cloud, alpha, tetra_mesh, pt_map)
     Tmesh.compute_vertex_normals()
     o3d.visualization.draw_geometries([Tmesh])
+    print(Tmesh)
 
-#SciPy Delaunay Triangulation - 30 min compile time. Creates a mesh inside a tetramesh
+#SciPy Delaunay Triangulation - 30 minute compile time for Complex. Creates a mesh inside a tetramesh
+#Panther takes seconds
+mesh = (o3d.io.read_triangle_mesh("STLs/panther.stl"))
+cloud = o3d.geometry.PointCloud()
+cloud.points = mesh.vertices
 points = np.asarray(mesh.vertices)
 tri = Delaunay(points) # points: np.array() of 3d points 
 indices = tri.simplices
 vertices = points[indices]
 print(tri)
-#o3d.visualization.draw_geometries([tri])
 
 #Code used to plot the Delaunay
 def plot_tri(ax, points, tri):

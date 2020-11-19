@@ -32,6 +32,18 @@ with h5py.File("./Practice/full_dataset_vectors.h5", "r") as hf:
     xtest = rgb_data_transform(xtest)
     targets_train = to_categorical(targets_train).astype(np.integer)
     targets_test = to_categorical(targets_test).astype(np.integer)
+
+#Reloading the model for evaluation and continual training
+model = load_model("./Practice/Classified.h5")
+print("Model Loaded")
+model.summary()
+history = model.fit(xtrain, targets_train, batch_size=128, epochs=1000, verbose=1, validation_split=0.3)
+test = model.evaluate(xtrain,targets_train,verbose=1)
+print("%s: %.2f%%" % (model.metrics_names[1], test[1]*100))
+
+model.save("./Practice/Classified.h5")
+print("Model saved")
+
 """
 #Building the model in Keras
 model = Sequential()
@@ -59,15 +71,4 @@ print("%s: %.2f%%" % (model.metrics_names[1], score[1]*100))
 
 model.save("./Practice/Classified.h5")
 print("Model saved")
-
 """
-#Reloading the model for evaluation and continual training
-model = load_model("./Practice/Classified.h5")
-print("Model Loaded")
-model.summary()
-history = model.fit(xtrain, targets_train, batch_size=128, epochs=100, verbose=1, validation_split=0.3)
-test = model.evaluate(xtest,targets_test,verbose=1)
-print("%s: %.2f%%" % (model.metrics_names[1], test[1]*100))
-
-model.save(model.h5)
-print("Model saved")
