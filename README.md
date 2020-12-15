@@ -1,5 +1,5 @@
 # Senior-Project
- This is the Senior Project for Andrew Jelson. I worked on the project over the fall semester of 2020 amid the Covid-19 Crisis.
+ This is the Senior Project for Andrew Jelson. I worked on this project over the fall semester of 2020 amid the Covid-19 crisis.
 
  The main python file in the repository is the "Algorithms.py". In that file I compare and contrast the current widely used algorithms for triangulating meshes off of point clouds. The metrics are as follows:
 
